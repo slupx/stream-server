@@ -86,15 +86,20 @@ async def websocket_viewer(websocket: WebSocket):
         print(f"Viewer removed. Total active viewers: {len(manager.active_viewers)}")
 
 if __name__ == "__main__":
+    # Render or other hostings define the PORT env variable and expect binding to 0.0.0.0
+    env_port = os.environ.get("PORT")
+    default_host = "0.0.0.0" if env_port else "127.0.0.1"
+    default_port = int(env_port) if env_port else 8000
+
     parser = argparse.ArgumentParser(description="AetherStream Server")
-    parser.add_argument("--host", type=str, default="127.0.0.1", 
-                        help="Host address to bind the server to (default: 127.0.0.1 for local security)")
-    parser.add_argument("--port", type=int, default=8000, 
+    parser.add_argument("--host", type=str, default=default_host, 
+                        help="Host address to bind the server to (default: 127.0.0.1 for local security, 0.0.0.0 for hosting)")
+    parser.add_argument("--port", type=int, default=default_port, 
                         help="Port to run the server on (default: 8000)")
     args = parser.parse_args()
 
-    # Warn about binding to 0.0.0.0
-    if args.host == "0.0.0.0":
+    # Warn about binding to 0.0.0.0 (skip warning if running on hosting environment)
+    if args.host == "0.0.0.0" and not env_port:
         # TODO(security): Binding to 0.0.0.0 exposes the server to public network interfaces.
         # Ensure proper network access control (firewall/VPN) is active.
         print("\n" + "=" * 80)
@@ -104,3 +109,4 @@ if __name__ == "__main__":
 
     print(f"Starting server on {args.host}:{args.port}...")
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+
