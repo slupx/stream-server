@@ -182,12 +182,51 @@
     let lastFpsUpdate = performance.now();
     let reconnectTimeout = null;
 
+    // Web Audio API playback variables
+    let audioCtx = null;
+    let nextPlayTime = 0;
+    const sampleRate = 24000; // Must match the sender's configured sample rate
+
     function getWsUrl() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         if (window.location.protocol === 'file:') {
             return 'ws://127.0.0.1:8000/ws/viewer';
         }
         return `${protocol}//${window.location.host}/ws/viewer`;
+    }
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            nextPlayTime = audioCtx.currentTime;
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playAudioSamples(samples) {
+        initAudio();
+        if (!audioCtx) return;
+
+        // Create buffer node
+        const buffer = audioCtx.createBuffer(1, samples.length, sampleRate);
+        buffer.getChannelData(0).set(samples);
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+
+        // Handle network latency or clock drift:
+        // If the playback queue is built up too far (> 300ms in the future), reset it to avoid delay.
+        if (nextPlayTime > audioCtx.currentTime + 0.3) {
+            nextPlayTime = audioCtx.currentTime;
+        }
+
+        // Schedule playback to start right after the previous packet ends
+        const startTime = Math.max(nextPlayTime, audioCtx.currentTime);
+        source.start(startTime);
+        nextPlayTime = startTime + buffer.duration;
     }
 
     function updateStatus(connected, text = '') {
@@ -220,29 +259,46 @@
                 updateStatus(true);
                 frameCount = 0;
                 lastFpsUpdate = performance.now();
+                // Resume/init audio when socket opens
+                initAudio();
             };
 
             ws.onmessage = (event) => {
-                const now = performance.now();
-                frameCount++;
-                if (now - lastFpsUpdate >= 1000) {
-                    fpsVal.textContent = Math.round((frameCount * 1000) / (now - lastFpsUpdate));
-                    frameCount = 0;
-                    lastFpsUpdate = now;
-                }
+                if (event.data.byteLength < 1) return;
 
-                const blob = new Blob([event.data], { type: 'image/jpeg' });
-                const newUrl = URL.createObjectURL(blob);
-                
-                const oldUrl = streamImg.src;
-                streamImg.src = newUrl;
-                if (oldUrl && oldUrl.startsWith('blob:')) {
-                    URL.revokeObjectURL(oldUrl);
-                }
+                // First byte determines packet type
+                const dataView = new DataView(event.data);
+                const packetType = dataView.getUint8(0);
 
-                if (streamImg.style.display !== 'block') {
-                    placeholder.style.display = 'none';
-                    streamImg.style.display = 'block';
+                if (packetType === 0) {
+                    // Video Packet (JPEG bytes)
+                    const videoBytes = event.data.slice(1);
+                    const blob = new Blob([videoBytes], { type: 'image/jpeg' });
+                    const newUrl = URL.createObjectURL(blob);
+                    
+                    const oldUrl = streamImg.src;
+                    streamImg.src = newUrl;
+                    if (oldUrl && oldUrl.startsWith('blob:')) {
+                        URL.revokeObjectURL(oldUrl);
+                    }
+
+                    if (streamImg.style.display !== 'block') {
+                        placeholder.style.display = 'none';
+                        streamImg.style.display = 'block';
+                    }
+
+                    const now = performance.now();
+                    frameCount++;
+                    if (now - lastFpsUpdate >= 1000) {
+                        fpsVal.textContent = Math.round((frameCount * 1000) / (now - lastFpsUpdate));
+                        frameCount = 0;
+                        lastFpsUpdate = now;
+                    }
+                } else if (packetType === 1) {
+                    // Audio Packet (Float32 PCM bytes)
+                    const audioBuffer = event.data.slice(1);
+                    const samples = new Float32Array(audioBuffer);
+                    playAudioSamples(samples);
                 }
             };
 
@@ -264,6 +320,9 @@
     };
 
     fullscreenBtn.addEventListener('click', () => {
+        // User gesture enables resuming AudioContext if blocked by browser autoplay policy
+        initAudio();
+        
         if (!document.fullscreenElement) {
             if (viewerContainer.requestFullscreen) {
                 viewerContainer.requestFullscreen();
@@ -278,6 +337,9 @@
             }
         }
     });
+
+    // Handle audio context resume on body interaction (fallback for autoplay policy)
+    document.body.addEventListener('click', initAudio, { once: true });
 
     connect();
 </script>
