@@ -7,39 +7,49 @@
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #0f172a;
-            color: #f8fafc;
+            background: #181818;
+            color: #e5e5e5;
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 2rem;
-            background: #1e293b;
-            border-bottom: 1px solid #334155;
+            padding: 0.75rem 1.5rem;
+            background: #222222;
+            border-bottom: 1px solid #333333;
+            height: 48px;
+            box-sizing: border-box;
+            z-index: 10;
         }
-        h1 {
-            font-size: 1.25rem;
-            margin: 0;
-            font-weight: 600;
-            letter-spacing: -0.025em;
-        }
-        .status {
-            font-size: 0.875rem;
+        .header-left {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 1.5rem;
+        }
+        h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+        .status {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #a3a3a3;
         }
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
-            background: #64748b;
+            background: #737373;
         }
         .status-dot.connected {
             background: #10b981;
@@ -47,134 +57,81 @@
         .status-dot.disconnected {
             background: #ef4444;
         }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 0.85rem;
+        }
+        .stats {
+            display: flex;
+            gap: 1.25rem;
+            color: #a3a3a3;
+        }
+        .stats span {
+            color: #e5e5e5;
+            font-weight: 500;
+        }
+        button {
+            background: #333333;
+            color: #e5e5e5;
+            border: 1px solid #444444;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        button:hover {
+            background: #444444;
+        }
         main {
             flex: 1;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-            gap: 1.5rem;
-        }
-        .viewer-card {
-            width: 100%;
-            max-width: 1000px;
-            aspect-ratio: 16/9;
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            background: #121212;
             position: relative;
+            width: 100vw;
+            height: calc(100vh - 48px);
         }
         #stream-img {
+            max-width: 100%;
+            max-height: 100%;
             width: 100%;
             height: 100%;
             object-fit: contain;
             display: none;
         }
         .placeholder {
-            color: #94a3b8;
-            font-size: 0.95rem;
-        }
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            width: 100%;
-            max-width: 1000px;
-            align-items: center;
-            justify-content: space-between;
-            background: #1e293b;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid #334155;
-        }
-        .stats {
-            display: flex;
-            gap: 1.5rem;
-            font-size: 0.875rem;
-            color: #94a3b8;
-        }
-        .stats span {
-            color: #f8fafc;
-            font-weight: 500;
-        }
-        .actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        input[type="text"] {
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: #f8fafc;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 0.875rem;
-            width: 260px;
-            outline: none;
-        }
-        input[type="text"]:focus {
-            border-color: #3b82f6;
-        }
-        button {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-weight: 500;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: background 0.15s ease;
-        }
-        button:hover {
-            background: #2563eb;
-        }
-        button.disconnect {
-            background: #ef4444;
-        }
-        button.disconnect:hover {
-            background: #dc2626;
-        }
-        button.secondary {
-            background: #334155;
-            color: #f8fafc;
-        }
-        button.secondary:hover {
-            background: #475569;
+            color: #737373;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>AetherStream</h1>
-    <div class="status">
-        <div id="status-dot" class="status-dot disconnected"></div>
-        <span id="status-text">Disconnected</span>
+    <div class="header-left">
+        <h1>AetherStream</h1>
+        <div class="status">
+            <div id="status-dot" class="status-dot disconnected"></div>
+            <span id="status-text">Disconnected</span>
+        </div>
     </div>
-</header>
-
-<main>
-    <div class="viewer-card" id="viewer-card">
-        <div id="placeholder" class="placeholder">No active stream. Start the sender to begin.</div>
-        <img id="stream-img" alt="Stream Feed" />
-    </div>
-
-    <div class="controls">
+    <div class="header-right">
         <div class="stats">
             <div>FPS: <span id="fps-val">0</span></div>
             <div>Resolution: <span id="resolution-val">0 x 0</span></div>
         </div>
-        <div class="actions">
-            <input type="text" id="server-url" placeholder="ws://localhost:8000/ws/viewer" />
-            <button id="connect-btn">Connect</button>
-            <button id="fullscreen-btn" class="secondary">Fullscreen</button>
-        </div>
+        <button id="fullscreen-btn">Fullscreen</button>
     </div>
+</header>
+
+<main id="viewer-container">
+    <div id="placeholder" class="placeholder">No active stream. Waiting for sender...</div>
+    <img id="stream-img" alt="Stream Feed" />
 </main>
 
 <script>
@@ -184,37 +141,29 @@
     const streamImg = document.getElementById('stream-img');
     const fpsVal = document.getElementById('fps-val');
     const resolutionVal = document.getElementById('resolution-val');
-    const serverUrlInput = document.getElementById('server-url');
-    const connectBtn = document.getElementById('connect-btn');
     const fullscreenBtn = document.getElementById('fullscreen-btn');
-    const viewerCard = document.getElementById('viewer-card');
+    const viewerContainer = document.getElementById('viewer-container');
 
     let ws = null;
     let frameCount = 0;
     let lastFpsUpdate = performance.now();
     let reconnectTimeout = null;
 
-    function getDefaultWsUrl() {
+    function getWsUrl() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         if (window.location.protocol === 'file:') {
             return 'ws://127.0.0.1:8000/ws/viewer';
         }
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         return `${protocol}//${window.location.host}/ws/viewer`;
     }
-
-    serverUrlInput.value = getDefaultWsUrl();
 
     function updateStatus(connected, text = '') {
         if (connected) {
             statusDot.className = 'status-dot connected';
             statusText.textContent = 'Connected';
-            connectBtn.textContent = 'Disconnect';
-            connectBtn.className = 'disconnect';
         } else {
             statusDot.className = 'status-dot disconnected';
             statusText.textContent = text || 'Disconnected';
-            connectBtn.textContent = 'Connect';
-            connectBtn.className = '';
             
             placeholder.style.display = 'block';
             streamImg.style.display = 'none';
@@ -227,9 +176,7 @@
         if (reconnectTimeout) clearTimeout(reconnectTimeout);
         if (ws) ws.close();
 
-        const url = serverUrlInput.value.trim();
-        if (!url) return;
-
+        const url = getWsUrl();
         updateStatus(false, 'Connecting...');
 
         try {
@@ -279,35 +226,18 @@
         }
     }
 
-    function disconnect() {
-        if (reconnectTimeout) clearTimeout(reconnectTimeout);
-        if (ws) {
-            ws.close();
-            ws = null;
-        }
-        updateStatus(false, 'Disconnected');
-    }
-
-    connectBtn.addEventListener('click', () => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            disconnect();
-        } else {
-            connect();
-        }
-    });
-
     streamImg.onload = () => {
         resolutionVal.textContent = `${streamImg.naturalWidth} x ${streamImg.naturalHeight}`;
     };
 
     fullscreenBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
-            if (viewerCard.requestFullscreen) {
-                viewerCard.requestFullscreen();
-            } else if (viewerCard.webkitRequestFullscreen) {
-                viewerCard.webkitRequestFullscreen();
-            } else if (viewerCard.msRequestFullscreen) {
-                viewerCard.msRequestFullscreen();
+            if (viewerContainer.requestFullscreen) {
+                viewerContainer.requestFullscreen();
+            } else if (viewerContainer.webkitRequestFullscreen) {
+                viewerContainer.webkitRequestFullscreen();
+            } else if (viewerContainer.msRequestFullscreen) {
+                viewerContainer.msRequestFullscreen();
             }
         } else {
             if (document.exitFullscreen) {
