@@ -3,618 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AetherStream // Real-Time Screen Stream</title>
-    <!-- Modern typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
+    <title>AetherStream</title>
     <style>
-        :root {
-            --bg-base: #0b0f19;
-            --bg-surface: rgba(17, 24, 39, 0.7);
-            --bg-card: rgba(30, 41, 59, 0.4);
-            --border-glow: rgba(99, 102, 241, 0.15);
-            --border-muted: rgba(255, 255, 255, 0.08);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --color-primary: #6366f1; /* Indigo */
-            --color-primary-hover: #4f46e5;
-            --color-success: #10b981; /* Emerald */
-            --color-error: #f43f5e; /* Rose */
-            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            box-sizing: border-box;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
             margin: 0;
             padding: 0;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-base);
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
-            color: var(--text-main);
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            min-height: 100vh;
         }
-
-        /* Header Navigation */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.25rem 2rem;
-            background: rgba(11, 15, 25, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-muted);
-            z-index: 10;
+            padding: 1rem 2rem;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 700;
+        h1 {
             font-size: 1.25rem;
-            letter-spacing: 0.05em;
-            background: linear-gradient(135deg, #a5b4fc 0%, var(--color-primary) 50%, #818cf8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: -0.025em;
         }
-
-        .logo-dot {
-            width: 8px;
-            height: 8px;
-            background-color: var(--color-primary);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--color-primary);
-            animation: pulse-glow 2s infinite;
-        }
-
-        .connection-status {
+        .status {
+            font-size: 0.875rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            padding: 0.375rem 0.75rem;
-            border-radius: 9999px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-muted);
-            transition: var(--transition-smooth);
         }
-
-        .connection-status.connected {
-            border-color: rgba(16, 185, 129, 0.3);
-            background: rgba(16, 185, 129, 0.06);
-            color: var(--color-success);
-        }
-
-        .connection-status.disconnected {
-            border-color: rgba(244, 63, 94, 0.3);
-            background: rgba(244, 63, 94, 0.06);
-            color: var(--color-error);
-        }
-
         .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: var(--text-muted);
+            background: #64748b;
         }
-
-        .connected .status-dot {
-            background-color: var(--color-success);
-            box-shadow: 0 0 8px var(--color-success);
-            animation: pulse-glow 1.5s infinite;
+        .status-dot.connected {
+            background: #10b981;
         }
-
-        .disconnected .status-dot {
-            background-color: var(--color-error);
-            box-shadow: 0 0 8px var(--color-error);
+        .status-dot.disconnected {
+            background: #ef4444;
         }
-
-        /* Main Workspace */
         main {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 2rem;
             gap: 1.5rem;
-            position: relative;
         }
-
-        .stream-container {
+        .viewer-card {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1000px;
             aspect-ratio: 16/9;
-            background: var(--bg-surface);
-            border-radius: 16px;
-            border: 1px solid var(--border-muted);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px var(--border-glow);
-            position: relative;
-            overflow: hidden;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: border-color 0.5s ease;
+            overflow: hidden;
+            position: relative;
         }
-
-        .stream-container:hover {
-            border-color: rgba(99, 102, 241, 0.3);
-        }
-
-        /* Stream Display Element */
         #stream-img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: none;
             width: 100%;
             height: 100%;
+            object-fit: contain;
+            display: none;
         }
-
-        /* Placeholder Screen State */
         .placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.25rem;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .placeholder-icon {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--color-primary);
-            font-size: 1.5rem;
-            animation: bounce 2s infinite ease-in-out;
-        }
-
-        .placeholder-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .placeholder-subtitle {
+            color: #94a3b8;
             font-size: 0.95rem;
-            color: var(--text-muted);
-            max-width: 320px;
-            line-height: 1.5;
         }
-
-        /* Control / Stats Dashboard */
-        .dashboard-panel {
+        .controls {
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            max-width: 1200px;
-            padding: 1rem 1.5rem;
-            background: var(--bg-card);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-muted);
-            border-radius: 12px;
             gap: 1rem;
-        }
-
-        .stats-group {
-            display: flex;
+            width: 100%;
+            max-width: 1000px;
             align-items: center;
-            gap: 1.5rem;
+            justify-content: space-between;
+            background: #1e293b;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #334155;
         }
-
-        .stat-item {
+        .stats {
             display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
         }
-
-        .stat-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
+        .stats span {
+            color: #f8fafc;
             font-weight: 500;
         }
-
-        .stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        /* Address configuration toggle */
-        .config-group {
+        .actions {
             display: flex;
-            align-items: center;
             gap: 0.5rem;
         }
-
-        .input-text {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border-muted);
-            border-radius: 6px;
+        input[type="text"] {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #f8fafc;
             padding: 0.5rem 0.75rem;
-            color: var(--text-main);
-            font-family: 'JetBrains Mono', monospace;
+            border-radius: 6px;
+            font-family: monospace;
             font-size: 0.875rem;
+            width: 260px;
             outline: none;
-            width: 240px;
-            transition: var(--transition-smooth);
         }
-
-        .input-text:focus {
-            border-color: var(--color-primary);
-            box-shadow: 0 0 8px rgba(99, 102, 241, 0.25);
+        input[type="text"]:focus {
+            border-color: #3b82f6;
         }
-
-        .btn {
-            background-color: var(--color-primary);
+        button {
+            background: #3b82f6;
             color: white;
             border: none;
-            border-radius: 6px;
             padding: 0.5rem 1rem;
-            font-family: 'Outfit', sans-serif;
+            border-radius: 6px;
+            font-weight: 500;
             font-size: 0.875rem;
-            font-weight: 600;
             cursor: pointer;
-            transition: var(--transition-smooth);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            transition: background 0.15s ease;
         }
-
-        .btn:hover {
-            background-color: var(--color-primary-hover);
-            transform: translateY(-1px);
+        button:hover {
+            background: #2563eb;
         }
-
-        .btn:active {
-            transform: translateY(0);
+        button.disconnect {
+            background: #ef4444;
         }
-
-        .btn-secondary {
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-muted);
-            color: var(--text-main);
+        button.disconnect:hover {
+            background: #dc2626;
         }
-
-        .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
+        button.secondary {
+            background: #334155;
+            color: #f8fafc;
         }
-
-        /* Animations */
-        @keyframes pulse-glow {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.15);
-                opacity: 0.6;
-            }
-        }
-
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-6px);
-            }
-        }
-
-        /* Fullscreen Viewport Mode */
-        :-webkit-full-screen .stream-container {
-            width: 100vw;
-            height: 100vh;
-            max-width: none;
-            aspect-ratio: auto;
-            border-radius: 0;
-            border: none;
-        }
-        :-moz-full-screen .stream-container {
-            width: 100vw;
-            height: 100vh;
-            max-width: none;
-            aspect-ratio: auto;
-            border-radius: 0;
-            border: none;
-        }
-        :fullscreen .stream-container {
-            width: 100vw;
-            height: 100vh;
-            max-width: none;
-            aspect-ratio: auto;
-            border-radius: 0;
-            border: none;
-        }
-
-        /* Footer info */
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            border-top: 1px solid var(--border-muted);
-            background: rgba(11, 15, 25, 0.4);
-        }
-
-        /* Responsive styling adjustments */
-        @media (max-width: 768px) {
-            header {
-                padding: 1rem;
-            }
-            main {
-                padding: 1rem;
-            }
-            .dashboard-panel {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .stats-group {
-                justify-content: space-around;
-            }
-            .config-group {
-                flex-direction: column;
-            }
-            .input-text {
-                width: 100%;
-            }
+        button.secondary:hover {
+            background: #475569;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">
-            <div class="logo-dot"></div>
-            <span>AETHERSTREAM</span>
+<header>
+    <h1>AetherStream</h1>
+    <div class="status">
+        <div id="status-dot" class="status-dot disconnected"></div>
+        <span id="status-text">Disconnected</span>
+    </div>
+</header>
+
+<main>
+    <div class="viewer-card" id="viewer-card">
+        <div id="placeholder" class="placeholder">No active stream. Start the sender to begin.</div>
+        <img id="stream-img" alt="Stream Feed" />
+    </div>
+
+    <div class="controls">
+        <div class="stats">
+            <div>FPS: <span id="fps-val">0</span></div>
+            <div>Resolution: <span id="resolution-val">0 x 0</span></div>
         </div>
-        <div id="connection-badge" class="connection-status disconnected">
-            <div class="status-dot"></div>
-            <span id="status-text">Disconnected</span>
+        <div class="actions">
+            <input type="text" id="server-url" placeholder="ws://localhost:8000/ws/viewer" />
+            <button id="connect-btn">Connect</button>
+            <button id="fullscreen-btn" class="secondary">Fullscreen</button>
         </div>
-    </header>
+    </div>
+</main>
 
-    <main>
-        <!-- Stream Display Card -->
-        <div id="stream-card" class="stream-container">
-            <!-- Loading/Disconnected Placeholder -->
-            <div id="stream-placeholder" class="placeholder">
-                <div class="placeholder-icon">📡</div>
-                <div class="placeholder-title">No Active Stream</div>
-                <div class="placeholder-subtitle">Start the Python Screen Sender client on your computer to push video frames here.</div>
-            </div>
-            
-            <!-- Active Video Render Feed -->
-            <img id="stream-img" alt="Live Screen Stream" />
-        </div>
+<script>
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+    const placeholder = document.getElementById('placeholder');
+    const streamImg = document.getElementById('stream-img');
+    const fpsVal = document.getElementById('fps-val');
+    const resolutionVal = document.getElementById('resolution-val');
+    const serverUrlInput = document.getElementById('server-url');
+    const connectBtn = document.getElementById('connect-btn');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const viewerCard = document.getElementById('viewer-card');
 
-        <!-- Dashboard panel -->
-        <div class="dashboard-panel">
-            <div class="stats-group">
-                <div class="stat-item">
-                    <span class="stat-label">Frame Rate</span>
-                    <span id="fps-val" class="stat-value">0 FPS</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Resolution</span>
-                    <span id="resolution-val" class="stat-value">0 x 0</span>
-                </div>
-            </div>
+    let ws = null;
+    let frameCount = 0;
+    let lastFpsUpdate = performance.now();
+    let reconnectTimeout = null;
 
-            <div class="config-group">
-                <input id="server-url" type="text" class="input-text" placeholder="ws://localhost:8000/ws/viewer" />
-                <button id="connect-btn" class="btn">Connect</button>
-                <button id="fullscreen-btn" class="btn btn-secondary">Fullscreen</button>
-            </div>
-        </div>
-    </main>
-
-    <footer>
-        AetherStream Modular Screen Broker. Optimized for sub-100ms real-time delivery.
-    </footer>
-
-    <script>
-        // DOM Elements
-        const connectionBadge = document.getElementById('connection-badge');
-        const statusText = document.getElementById('status-text');
-        const placeholder = document.getElementById('stream-placeholder');
-        const streamImg = document.getElementById('stream-img');
-        const fpsVal = document.getElementById('fps-val');
-        const resolutionVal = document.getElementById('resolution-val');
-        const serverUrlInput = document.getElementById('server-url');
-        const connectBtn = document.getElementById('connect-btn');
-        const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const streamCard = document.getElementById('stream-card');
-
-        let ws = null;
-        let frameCount = 0;
-        let lastFpsUpdate = performance.now();
-        let currentFps = 0;
-        let reconnectTimeout = null;
-
-        // Auto-detect server URL based on window location
-        function getDefaultWsUrl() {
-            if (window.location.protocol === 'file:') {
-                return 'ws://127.0.0.1:8000/ws/viewer';
-            }
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            return `${protocol}//${window.location.host}/ws/viewer`;
+    function getDefaultWsUrl() {
+        if (window.location.protocol === 'file:') {
+            return 'ws://127.0.0.1:8000/ws/viewer';
         }
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        return `${protocol}//${window.location.host}/ws/viewer`;
+    }
 
-        // Set default value in input
-        serverUrlInput.value = getDefaultWsUrl();
+    serverUrlInput.value = getDefaultWsUrl();
 
-        // Update connection status UI indicators
-        function updateStatus(connected, message = '') {
-            if (connected) {
-                connectionBadge.className = 'connection-status connected';
-                statusText.textContent = 'Connected';
-                connectBtn.textContent = 'Disconnect';
-                connectBtn.style.backgroundColor = 'var(--color-error)';
-            } else {
-                connectionBadge.className = 'connection-status disconnected';
-                statusText.textContent = message || 'Disconnected';
-                connectBtn.textContent = 'Connect';
-                connectBtn.style.backgroundColor = 'var(--color-primary)';
-                
-                // Show placeholder and hide image
-                placeholder.style.display = 'flex';
-                streamImg.style.display = 'none';
-                fpsVal.textContent = '0 FPS';
-                resolutionVal.textContent = '0 x 0';
-            }
-        }
-
-        // Connect to the WebSocket relay server
-        function connect() {
-            // Cancel existing reconnects
-            if (reconnectTimeout) {
-                clearTimeout(reconnectTimeout);
-                reconnectTimeout = null;
-            }
-
-            // Close current socket if open
-            if (ws) {
-                ws.close();
-            }
-
-            const targetUrl = serverUrlInput.value.trim();
-            if (!targetUrl) {
-                alert('Please enter a valid WebSocket server URL.');
-                return;
-            }
-
-            updateStatus(false, 'Connecting...');
+    function updateStatus(connected, text = '') {
+        if (connected) {
+            statusDot.className = 'status-dot connected';
+            statusText.textContent = 'Connected';
+            connectBtn.textContent = 'Disconnect';
+            connectBtn.className = 'disconnect';
+        } else {
+            statusDot.className = 'status-dot disconnected';
+            statusText.textContent = text || 'Disconnected';
+            connectBtn.textContent = 'Connect';
+            connectBtn.className = '';
             
-            try {
-                ws = new WebSocket(targetUrl);
-                ws.binaryType = 'arraybuffer';
+            placeholder.style.display = 'block';
+            streamImg.style.display = 'none';
+            fpsVal.textContent = '0';
+            resolutionVal.textContent = '0 x 0';
+        }
+    }
 
-                ws.onopen = () => {
-                    console.log('Connected to server');
-                    updateStatus(true);
+    function connect() {
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        if (ws) ws.close();
+
+        const url = serverUrlInput.value.trim();
+        if (!url) return;
+
+        updateStatus(false, 'Connecting...');
+
+        try {
+            ws = new WebSocket(url);
+            ws.binaryType = 'arraybuffer';
+
+            ws.onopen = () => {
+                updateStatus(true);
+                frameCount = 0;
+                lastFpsUpdate = performance.now();
+            };
+
+            ws.onmessage = (event) => {
+                const now = performance.now();
+                frameCount++;
+                if (now - lastFpsUpdate >= 1000) {
+                    fpsVal.textContent = Math.round((frameCount * 1000) / (now - lastFpsUpdate));
                     frameCount = 0;
-                    lastFpsUpdate = performance.now();
-                };
+                    lastFpsUpdate = now;
+                }
 
-                ws.onmessage = (event) => {
-                    // Update FPS count
-                    const now = performance.now();
-                    frameCount++;
-                    if (now - lastFpsUpdate >= 1000) {
-                        currentFps = Math.round((frameCount * 1000) / (now - lastFpsUpdate));
-                        fpsVal.textContent = `${currentFps} FPS`;
-                        frameCount = 0;
-                        lastFpsUpdate = now;
-                    }
+                const blob = new Blob([event.data], { type: 'image/jpeg' });
+                const newUrl = URL.createObjectURL(blob);
+                
+                const oldUrl = streamImg.src;
+                streamImg.src = newUrl;
+                if (oldUrl && oldUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(oldUrl);
+                }
 
-                    // Create blob from the array buffer bytes
-                    const blob = new Blob([event.data], { type: 'image/jpeg' });
-                    const url = URL.createObjectURL(blob);
+                if (streamImg.style.display !== 'block') {
+                    placeholder.style.display = 'none';
+                    streamImg.style.display = 'block';
+                }
+            };
 
-                    // Revoke old URL to prevent memory leak
-                    const oldUrl = streamImg.src;
-                    streamImg.src = url;
-                    
-                    if (oldUrl && oldUrl.startsWith('blob:')) {
-                        URL.revokeObjectURL(oldUrl);
-                    }
+            ws.onclose = () => {
+                updateStatus(false, 'Disconnected');
+                reconnectTimeout = setTimeout(connect, 2000);
+            };
 
-                    // Toggle visibility on first packet
-                    if (streamImg.style.display !== 'block') {
-                        placeholder.style.display = 'none';
-                        streamImg.style.display = 'block';
-                    }
-                };
-
-                ws.onclose = () => {
-                    console.log('Connection closed');
-                    updateStatus(false, 'Disconnected');
-                    // Auto-reconnect after 2 seconds
-                    reconnectTimeout = setTimeout(connect, 2000);
-                };
-
-                ws.onerror = (error) => {
-                    console.error('WebSocket Error:', error);
-                    updateStatus(false, 'Connection Error');
-                };
-
-            } catch (e) {
-                console.error('Socket creation exception:', e);
+            ws.onerror = () => {
                 updateStatus(false, 'Error');
+            };
+        } catch (e) {
+            updateStatus(false, 'Error');
+        }
+    }
+
+    function disconnect() {
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+        updateStatus(false, 'Disconnected');
+    }
+
+    connectBtn.addEventListener('click', () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            disconnect();
+        } else {
+            connect();
+        }
+    });
+
+    streamImg.onload = () => {
+        resolutionVal.textContent = `${streamImg.naturalWidth} x ${streamImg.naturalHeight}`;
+    };
+
+    fullscreenBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+            if (viewerCard.requestFullscreen) {
+                viewerCard.requestFullscreen();
+            } else if (viewerCard.webkitRequestFullscreen) {
+                viewerCard.webkitRequestFullscreen();
+            } else if (viewerCard.msRequestFullscreen) {
+                viewerCard.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
             }
         }
+    });
 
-        // Disconnect manually
-        function disconnect() {
-            if (reconnectTimeout) {
-                clearTimeout(reconnectTimeout);
-                reconnectTimeout = null;
-            }
-            if (ws) {
-                ws.close();
-                ws = null;
-            }
-            updateStatus(false, 'Disconnected');
-        }
-
-        // Toggle connection state on button click
-        connectBtn.addEventListener('click', () => {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                disconnect();
-            } else {
-                connect();
-            }
-        });
-
-        // Safe resolution display when image loads
-        streamImg.onload = () => {
-            resolutionVal.textContent = `${streamImg.naturalWidth} x ${streamImg.naturalHeight}`;
-        };
-
-        // Fullscreen activation
-        fullscreenBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                if (streamCard.requestFullscreen) {
-                    streamCard.requestFullscreen();
-                } else if (streamCard.webkitRequestFullscreen) { /* Safari */
-                     streamCard.webkitRequestFullscreen();
-                } else if (streamCard.msRequestFullscreen) { /* IE11 */
-                     streamCard.msRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        });
-
-        // Initialize connection
-        connect();
-    </script>
+    connect();
+</script>
 </body>
 </html>
